@@ -1,0 +1,279 @@
+---
+title: "Mendes_Michael_Proposal"
+author: "Michael Mendes"
+date: "`r date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Background information:
+
+  This data is a portion of the National Lung Cancer Registry collected at Wroclaw Thoracic Surgery Center at the Medical University of Wroclaw in Poland. The data contains records of individual major lung resections for the primary diagnosis of lung cancer. It was collected between 2007 and 2011 both post and pre-operation. The National Lung Cancer Registry is controlled by the Institute of Tuberculosis and Pulmonary Disease in Warsaw. The dataset was collected from the University of California Irvine's Machine Learning Repository. The original dataset included 139 predictors; the 17 relevant features were selected as described in Zieba et al., 2014. Using this data set, I plan to create a decision model for assessing risk to patients of death less than 1-year post-operation for lung resection surgery. This could provide useful decision support for lung cancer patients deciding if surgery is a good option for treatment of lung tumors. This data is imbalanced in that the number of cases in which death within a year occurred is not as frequent as the outcome that the patient survived at least a year post-operation, so the model will be biased to select survival as the outcome based on prevalence of death. The original dataset from the National Lung Cancer Registry contained a total of 1200 records, but for this analysis the records with missing information has been removed, leaving 470 individual records of surgical outcomes. 
+  
+  The only real issue found with this data is the lack of information regarding the ICD10 codes used as the diagnosis attribute in the dataset. The source mentioned does not go into detail as to the actual individual diagnoses but stated that each DGN (DGN to DGN8) corresponds to a unique set of ICD10 codes. This is detrimental to our decision model, since some surgeries performed in the study consisted of removal of more than one tumor in some case. There is also variance in the size of the tumor, though this is also included as an attribute. Contact with the Institute of Tuberculosis and Pulmonary Disease is forthcoming to see if the original dataset's information can be obtained to map diagnosis attributes with number and frequency of patient's tumors.
+  
+  Using this data set, this project aims to create a classification model for assessing risk to patients of death less than 1-year post-operation for lung resection surgery. Given a test patient's specific responses to a survey of the attributes presented in this dataset, we will try to predict whether post-operative survival of at least 1 year is likely. This attribute list has already been decreased from the original attribute list to include only relevant data points, but this project also looks to select the most relevant feature or set of features in predicting thoracic surgery survival. We will try to use a logistic regression approach to creating a decision boundary for the attributes included in this dataset, though a support vector machine approach will also be applied similar to that found in the reference paper for this dataset (Zieba et al.). This could provide useful decision support for lung cancer patients deciding if surgery is a good option for treatment of lung tumors. This data is imbalanced in that the number of cases in which death within a year occurred is not as frequent as the outcome that the patient survived at least a year post-operation, so the model will be biased to select survival as the outcome based on prevalence of death. The original dataset from the National Lung Cancer Registry contained a total of 1200 records, but for this analysis the records with missing information has been removed, leaving 470 individual records of surgical outcomes. Survival post-operation will vary depending on known risk factors taken into account in this investigation, such as past history of myocardial infarction (within the past 6 months), smoking status, age, and peripheral heart disease diagnosis. 
+
+
+Verbal description of predictors:
+
+Response variable: Risk1Y - Risk of death less than 1-year after the resection occurred.
+This will be a Boolean variable (1 for death within a year of treatment, 0 for survival).
+
+Feature Description: 
+NOTE: For all Boolean values, the dataset will be changed for analysis so that TRUE=1 and FALSE=0
+
+id: the identification number for each patient record
+	This is an arbitrary value assigned to each anonymized record.
+	
+DGN: 8 groups (DGN1 - DGN8) of diagnosis classes consisting of unique sets of ICD10 codes corresponding to the patients' primary diagnosis and secondary tumors if present, qualitative data. 
+  No information regarding the ICD10 codes contributing to each class were available from initial literature review; contact with the Institute of   Tuberculosis and Pulmonary Disease in Warsaw has been initiated for possible retrieval of original diagnosis code values.
+  
+PRE4: Forced Vital Capacity (FVC), quantitative data.
+  Forced vital capacity is the amount of air that can be forcibly pushed from the lungs as quickly as possible after inhaling as much as possible.   This value is measured in liters by a device called a pneumotach. A pneumotach screen measures the volume of air exhaled by measuring the          pressure drop during exhalation. A measurement is taken and recorded after at least 3 measures within 150 mL of each other are taken.
+  
+PRE5: Forced Expiratory Volume (FEV1), quantitative data.
+  The maximal amount of air that a patient can exhale within 1 second measured in liters. This measures pulmonary obstruction, and it is commonly   used with FVC to measure amount of obstruction incurred by a given diagnosis. A few of the values in the dataset do not make sense, and           consideration will be taken in removing these records from the analysis. For example, a few of the patient records have FEV1 values higher        than their FVC.
+  
+PRE6: Performance Status of the patient, scaled data.
+  The performance status for a patient is measured on the Zubrod (also known as the ECOG scale for the Eastern Cooperative Oncology Group) scale.   For this data set, data between scale value 0 - 2 is used, though the scale has 5 levels total. The three scale levels included in this study     are as follows:
+  
+  0 - normal activity
+  
+  1 - Symptomatic but still ambulatory and self-sufficient
+  
+  2 - Ambulatory more than 50% of the time with some occasional third party assistance for activities
+  
+PRE7: Pain incurred pre-operation, Boolean data.
+
+	This is a Boolean measure of whether or not the patient was in pain pre-operation
+	
+PRE8: Hemoptysis before surgery, Boolean data.
+
+	This is a Boolean measure of hemoptysis, or coughing up blood, pre-operation.
+	
+PRE9: Dyspnea before surgery, Boolean data.
+
+  Dyspnea is a fairly broad term encompassing any difficulty with breathing. It is often used as a synonym for shortness of breath, though it can    also be described as a tightening of the chest or a feeling of suffocation.
+  
+PRE10: Cough symptom before surgery, Boolean data.
+
+  This is a Boolean measure of whether or not the patient experienced coughing regularly before surgery. The data contains no measure of severity   of coughing or frequency.
+  
+PRE11: Weakness experienced before surgery, Boolean data.
+
+  This is a Boolean measure of whether or not the patient experienced weakness pre-operation. Weakness is often an accompanying symptom with         shortness of breath and lung obstruction.
+  
+PRE14: Size of the original tumor on the TNM scale, scale data.
+
+  This attribute corresponds to the T of the TNM cancer staging system. It is the size of the main tumor found in the patient. In our study, these   range from OC11 to OC14, corresponding to T1 through T4. 
+  
+  T1 - tumor of size 3cm or less
+  
+  T2 - tumor size between 3cm and 7cm
+  
+  T3 - tumor size greater than 7cm, or the tumor that is specifically invading one of several lung-peripheral areas
+  
+  T4 - This level has no size parameters, but refers to the extent of metastasis the tumor has undergone. Tumors that have invaded the              mediastinum,   heart, great vessels, trachea, recurrent laryngeal nerve, esophagus, vertebral body, or carina are included. Tumors that have      formed a separate nodule in an ipsilateral lobe are also included.
+  
+PRE17: Type 2 Diabetes Mellitus, Boolean data.
+
+  This is a Boolean measure of diabetes mellitus type 2 before the operation. Diabetes mellitus type 2 has been associated with higher risk of       mortality in a surgical setting for several types of surgery including cardiac and orthopedic procedures.
+  
+PRE19: Myocardial infarction occurrence within the 6 months preceding surgery, Boolean data.
+
+  This Boolean attribute records the occurrence of myocardial infarction within the 6 months leading to thoracic surgery. Myocardial infarction      (also known as heart attack), as well as peripheral arterial disease have been shown to be complicating factors in surgical outcomes and         recovery   rate. 
+  
+PRE25: Peripheral arterial disease (PAD) occurrence, Boolean data.
+
+	If the patient has been diagnosed with PAD, this Boolean attribute will be a 1, 0 if negative.
+	
+PRE30: Smoking status, Boolean data.
+
+  This Boolean attribute records if the patient has ever smoked before, and has no information on pack-years smoked or type of tobacco product       smoked.
+  
+PRE32: Asthma diagnosis, Boolean data.
+
+  If the patient has a diagnosis of asthma, this attribute will be a 1. Asthma causes pulmonary obstruction on its own in moderate to severe       cases.
+  
+AGE: Patient's age, quantitative data.
+
+	This is the patient's age measured in years at the time of the surgery.
+	
+	
+References:
+
+Maciej Z, Tomczak JM, Lubicz M, Witek J (2014) Boosted SVM for extracting rules from imbalanced data in application to prediction of the post-operative life expectancy in the lung cancer patients. In: Applied soft computing, vol 14, Elsevier, pp 99-108.
+
+UCI Machine Learning Repository
+https://archive.ics.uci.edu/ml/datasets/Thoracic+Surgery+Data#
+
+Lung Cancer Staging
+http://cancerstaging.org/references-tools/quickreferences/documents/lungmedium.pdf
+
+Zubrod Performance Scale
+https://jamanetwork.com/journals/jamaoncology/fullarticle/2432463
+
+Pulmonary Function Tests
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.599.9943&rep=rep1&type=pdf
+
+Diabetes Mellitus in Surgical Outcomes
+https://www.ncbi.nlm.nih.gov/pubmed/12587082
+
+Myocardial Infarction in Surgical Outcomes
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3843205/
+
+Show the dataset
+```{r}
+getwd()
+```
+
+Load the dataset
+```{r}
+TSurgery = read.csv("TSurgery.csv", header=T, na.strings="?")
+```
+Show dimensions of the set
+```{r}
+dim(TSurgery)
+```
+Column names
+```{r}
+names(TSurgery)
+```
+Show example data
+```{r}
+TSurgery
+```
+
+PreProcessing
+
+Replace true/false values with binary values
+```{r}
+TSurgery[,c(6,7,8,9,10,12,13,14,15,16,18)] <- lapply(TSurgery[,c(6,7,8,9,10,12,13,14,15,16,18)], as.numeric)
+```
+
+```{r}
+head(TSurgery)
+```
+```{r}
+library(dplyr)
+```
+Convert patient's mobility status to numeric values
+```{r}
+TSurgery$PRE6 = as.numeric(TSurgery$PRE6)
+TSurgery$PRE6 = TSurgery$PRE6 - 1
+```
+```{r}
+head(TSurgery)
+```
+Convert tumor size data to numeric scale
+```{r}
+TSurgery$PRE14 = as.numeric(TSurgery$PRE14)
+head(TSurgery)
+```
+
+We will use one hot encoding to deal with the categorical values of the diagnosis, though we are still unsure what each diagnosis comprises of (in terms of ICD10 codes).
+```{r}
+library(mltools)
+library(data.table)
+dgn = TSurgery$DGN
+dgn <- as.data.table(dgn)
+dgn_oh <- one_hot(dgn)
+```
+
+```{r}
+dgn_oh
+```
+Make diagnoses a dataframe
+```{r}
+dgn_oh = as.data.frame(dgn_oh)
+dgn_oh
+```
+
+Add all of the one hot encoded columns into the original dataframe
+```{r}
+TSurgery = cbind(TSurgery, dgn_oh)
+```
+
+
+```{r}
+TSurgery
+```
+
+Remove the original DGN (diagnosis) column
+```{r}
+TSurgery$DGN <- NULL
+head(TSurgery)
+```
+
+```{r}
+dim(TSurgery)
+```
+Tune the cost for the SVM to increase or decrease the margins (small cost = large margin, large cost = small margin)
+```{r}
+library(e1071)
+set.seed(1)
+tune.out=tune(svm,Risk1Yr~., data=TSurgery, kernel="linear", ranges=list(cost=c(0.001, 0.01, 0.1, 1,5,10,100)))
+summary(tune.out)
+plot(error~cost, data=tune.out$performances, log='x')
+```
+
+```{r}
+svm.linear=tune.out$best.model
+```
+
+```{r}
+tune.out=tune(svm, Risk1Yr~., data=TSurgery, kernel="radial", ranges=list(cost=c(0.001, 0.01, 0.1, 1,5,10,100), gamma=c(.001, .01, .1, 1, 5, 10, 100)))
+summary(tune.out)
+plot(error~cost, data=tune.out$performances, log='x')
+```
+
+```{r}
+TSurgery = read.csv("TSurgery.csv", header=T, na.strings="?")
+TSurgery[,c(6,7,8,9,10,12,13,14,15,16,18)] <- lapply(TSurgery[,c(6,7,8,9,10,12,13,14,15,16,18)], as.numeric)
+TSurgery$id <- NULL
+attach(TSurgery)
+```
+```{r}
+library(gbm)
+```
+
+```{r}
+train = c(1:423)
+TSurgery.train = TSurgery[train, ]
+TSurgery.test = TSurgery[-train, ]
+```
+
+```{r}
+head(TSurgery)
+```
+
+
+```{r}
+set.seed(1)
+boost.tsurgery = gbm(Risk1Yr~.,data=TSurgery, distribution="gaussian",n.trees=1000, shrinkage=0.1)
+```
+
+```{r}
+summary(boost.tsurgery)
+```
+
+```{r}
+boost.tsurgery = gbm(Risk1Yr~.,data=TSurgery, distribution="gaussian",n.trees=1000, shrinkage=0.01)
+summary(boost.tsurgery)
+```
+
+```{r}
+boost.tsurgery = gbm(Risk1Yr~.,data=TSurgery, distribution="gaussian",n.trees=1000, shrinkage=0.001)
+summary(boost.tsurgery)
+```
+
+```{r}
+svm.radial=svm(Risk1Yr~., data=TSurgery, kernel="radial", cost=5, gamma=100)
+plot(svm.radial, TSurgery, Risk1Yr~PRE14)
+```
+
